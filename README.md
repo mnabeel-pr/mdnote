@@ -82,6 +82,7 @@ You can also configure mdnote using environment variables:
 - `MDNOTE_VAULT_PATH`: Path to your notes vault
 - `MDNOTE_DAILY_DIR`: Daily notes directory (relative to vault)
 - `MDNOTE_EDITOR`: Your preferred text editor (overrides config file)
+- `MDNOTE_ADD_BLANK_LINES`: Set to "false" for compact mode (overrides config file)
 
 ### Example Configuration
 
@@ -94,6 +95,10 @@ DAILY_DIR_NAME="Journal/Daily"
 
 # Your preferred text editor (required for --edit command)
 EDITOR_CMD="nano"
+
+# Add blank lines between entries (optional)
+# Set to "false" for more compact notes
+ADD_BLANK_LINES="true"
 ```
 
 ## Usage
@@ -140,6 +145,7 @@ mdnote -h
 
 mdnote creates daily notes with this structure:
 
+### With blank lines (default):
 ```markdown
 ---
 date: 2025-01-15
@@ -149,8 +155,30 @@ tags: [daily]
 # 2025-01-15
 
 ## Journal
-- [2025-01-15 09:15] Started working on the new feature
-- [2025-01-15 14:30] Had a great meeting with the team
+
+- (09:15 | 2025-01-15) → Started working on the new feature
+
+- (14:30 | 2025-01-15) → Had a great meeting with the team
+
+## Tasks
+
+- [ ] #TODO Review pull request #123
+
+- [x] #TODO Update documentation  ✅ `10:30` 📅 2025-01-15
+```
+
+### Compact mode (ADD_BLANK_LINES="false"):
+```markdown
+---
+date: 2025-01-15
+tags: [daily]
+---
+
+# 2025-01-15
+
+## Journal
+- (09:15 | 2025-01-15) → Started working on the new feature
+- (14:30 | 2025-01-15) → Had a great meeting with the team
 
 ## Tasks
 - [ ] #TODO Review pull request #123

@@ -13,4 +13,9 @@ VAULT_PATH="$HOME/notes"
 DAILY_DIR_NAME="Journal/Daily"
 
 # Your preferred text editor (required for --edit command)
-EDITOR_CMD="nano" 
+EDITOR_CMD="nano"
+
+# Add blank lines between entries for better readability
+# Set to "false" for more compact notes
+# Default: "true"
+ADD_BLANK_LINES="true" 

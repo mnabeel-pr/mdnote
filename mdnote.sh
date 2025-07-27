@@ -21,6 +21,7 @@ load_config() {
     VAULT_PATH="${MDNOTE_VAULT_PATH:-$DEFAULT_VAULT_PATH}"
     DAILY_DIR_NAME="${MDNOTE_DAILY_DIR:-$DEFAULT_DAILY_DIR}"
     EDITOR_CMD="${MDNOTE_EDITOR:-}"
+    ADD_BLANK_LINES="${MDNOTE_ADD_BLANK_LINES:-true}"
     
     # Try to load from config files
     for config_file in "${CONFIG_PATHS[@]}"; do
@@ -107,7 +108,7 @@ add_todo() {
 
   # Append at bottom of Tasks section
   local TEMP_FILE="$FILE.tmp"
-  if ! awk -v task="- [ ] #TODO $TASK_TEXT" '
+  if ! awk -v task="- [ ] #TODO $TASK_TEXT" -v add_blank="$ADD_BLANK_LINES" '
     BEGIN { in_tasks=0; added=0 }
     {
       if ($0 ~ /^## Tasks/) {
@@ -119,7 +120,7 @@ add_todo() {
       if (in_tasks && $0 ~ /^## /) {
         # Reached next section after Tasks
         if (!added) {
-          print "";
+          if (add_blank == "true") print "";
           print task;
           added=1;
         }
@@ -130,7 +131,7 @@ add_todo() {
     }
     END {
       if (in_tasks && !added) {
-        print "";
+        if (add_blank == "true") print "";
         print task;
       }
     }
@@ -155,7 +156,7 @@ add_journal_note() {
 
   # Append at bottom of Journal section
   local TEMP_FILE="$FILE.tmp"
-  if ! awk -v entry="- [$DATE $(date +%H:%M)] $NOTE" '
+  if ! awk -v entry="- ($(date +%H:%M) | $DATE) → $NOTE" -v add_blank="$ADD_BLANK_LINES" '
     BEGIN { in_journal=0; added=0 }
     {
       if ($0 ~ /^## Journal/) {
@@ -167,7 +168,7 @@ add_journal_note() {
       if (in_journal && $0 ~ /^## /) {
         # Reached next section after Journal
         if (!added) {
-          print "";
+          if (add_blank == "true") print "";
           print entry;
           added=1;
         }
@@ -178,7 +179,7 @@ add_journal_note() {
     }
     END {
       if (in_journal && !added) {
-        print "";
+        if (add_blank == "true") print "";
         print entry;
       }
     }
@@ -233,7 +234,7 @@ mark_task_done_anywhere() {
   # Create the replacement line
   local timestamp="✅ \`$(date +%H:%M)\`"
   local date_stamp="📅 $(date +%Y-%m-%d)"
-  local done_line="${taskline/\[ \]/[x]}  $timestamp $date_stamp"
+  local done_line="${taskline/\[ \]/[x]} | (Completed at $timestamp $date_stamp)"
   
   # Create a temporary file
   local TEMP_FILE="$filepath.tmp"
@@ -294,6 +295,7 @@ print_help() {
   else
     echo "  Editor: $EDITOR_CMD"
   fi
+  echo "  Blank lines between entries: $ADD_BLANK_LINES"
 }
 
 case "$1" in
