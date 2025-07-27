@@ -170,20 +170,8 @@ If you don't have `fzf` installed, you can still use all mdnote features except 
 
 mdnote works great with:
 - **Obsidian**: Point `VAULT_PATH` to your Obsidian vault
-- **Dendron**: Use with Dendron's daily journal hierarchy
 - **VS Code**: Use with Markdown extensions
 - **Plain Markdown**: Works with any Markdown-based system
-
-### Shell Aliases
-
-Add these to your `.bashrc` or `.zshrc`:
-
-```bash
-alias qn='mdnote'
-alias qnt='mdnote -t'
-alias qnd='mdnote --done'
-alias qnl='mdnote --list'
-```
 
 ### Workflow Examples
 
@@ -200,16 +188,6 @@ mdnote --done  # Complete finished tasks
 mdnote "Daily summary: Accomplished X, Y, Z"
 mdnote --list  # Review remaining tasks
 ```
-
-## Error Handling
-
-mdnote includes built-in error handling for common issues:
-
-- **Missing vault path**: Prompts you to configure your vault location
-- **Missing task description**: Shows usage example when no task text is provided
-- **Editor not configured**: Displays instructions to set up your editor
-- **fzf not installed**: Provides installation instructions when using `--done` (all other features work without fzf)
-
 
 ### Development
 
@@ -228,12 +206,6 @@ vim mdnote.sh
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- Inspired by various command-line note-taking tools
-- Built for the Markdown/Obsidian community
-- Special thanks to the `fzf` project for the amazing fuzzy finder
 
 ---
 
