@@ -1,7 +1,63 @@
 #!/bin/bash
 
-VAULT_PATH="/Users/mnabeel/notes/second_brain"
-DAILY_DIR="$VAULT_PATH/04 - Journal/Daily"
+# mdnote - A minimal CLI tool for capturing daily notes and tasks in Markdown
+
+set -euo pipefail
+
+# Default configuration
+DEFAULT_VAULT_PATH="$HOME/notes"
+DEFAULT_DAILY_DIR="Journal/Daily"
+
+# Configuration file paths (in order of precedence)
+CONFIG_PATHS=(
+    "$HOME/.config/mdnote/config"
+    "$HOME/.mdnoterc"
+    ".mdnoterc"
+)
+
+# Load configuration
+load_config() {
+    # Start with defaults
+    VAULT_PATH="${MDNOTE_VAULT_PATH:-$DEFAULT_VAULT_PATH}"
+    DAILY_DIR_NAME="${MDNOTE_DAILY_DIR:-$DEFAULT_DAILY_DIR}"
+    EDITOR_CMD="${MDNOTE_EDITOR:-}"
+    
+    # Try to load from config files
+    for config_file in "${CONFIG_PATHS[@]}"; do
+        if [ -f "$config_file" ]; then
+            # shellcheck source=/dev/null
+            source "$config_file"
+            break
+        fi
+    done
+    
+    # Resolve full paths
+    DAILY_DIR="$VAULT_PATH/$DAILY_DIR_NAME"
+    
+    # Validate configuration
+    if [ ! -d "$VAULT_PATH" ]; then
+        echo "⚠️  Error: Vault path '$VAULT_PATH' does not exist."
+        echo ""
+        echo "Please set up mdnote by:"
+        echo "  1. Setting MDNOTE_VAULT_PATH environment variable, or"
+        echo "  2. Creating a config file at ~/.config/mdnote/config"
+        echo ""
+        echo "Example config file:"
+        echo "  VAULT_PATH=\"$HOME/notes\""
+        echo "  DAILY_DIR_NAME=\"Journal/Daily\""
+        echo "  EDITOR_CMD=\"nano\""
+        exit 1
+    fi
+    
+    # Set default editor if not configured
+    if [ -z "$EDITOR_CMD" ]; then
+        EDITOR_CMD="not-configured"
+    fi
+}
+
+# Load configuration at startup
+load_config
+
 DATE=$(date +%Y-%m-%d)
 FILE="$DAILY_DIR/$DATE.md"
 
@@ -34,7 +90,7 @@ add_todo() {
   # Check if there are arguments before shifting
   if [ $# -lt 2 ]; then
     echo "⚠️  No task description provided."
-    echo "Usage: qn -td \"Describe the task here\""
+    echo "Usage: mdnote -t \"Describe the task here\""
     exit 1
   fi
   
@@ -43,7 +99,7 @@ add_todo() {
 
   if [ -z "$TASK_TEXT" ]; then
     echo "⚠️  No task description provided."
-    echo "Usage: qn -td \"Describe the task here\""
+    echo "Usage: mdnote -t \"Describe the task here\""
     exit 1
   fi
 
@@ -220,19 +276,28 @@ list_all_todos() {
 }
 
 print_help() {
-  echo "📒 qn - Daily Note CLI"
+  echo "📒 mdnote - Daily Note CLI"
   echo ""
   echo "Usage:"
-  echo "  qn \"Note content\"        → Append journal note to today's file"
-  echo "  qn -td \"Task desc\"        → Add new #TODO under ## Tasks"
-  echo "  qn --done or -d           → Mark a #TODO as done (from any day)"
-  echo "  qn --list or -l           → List all incomplete #TODOs"
-  echo "  qn --edit or -e           → Open today's note in nvim"
-  echo "  qn --help or -h           → Show this help message"
+  echo "  mdnote \"Note content\"     → Append journal note to today's file"
+  echo "  mdnote -t \"Task desc\"    → Add new #TODO under ## Tasks"
+  echo "  mdnote --done or -d       → Mark a #TODO as done (from any day)"
+  echo "  mdnote --list or -l       → List all incomplete #TODOs"
+  echo "  mdnote --edit or -e       → Open today's note in $EDITOR_CMD"
+  echo "  mdnote --help or -h       → Show this help message"
+  echo ""
+  echo "Configuration:"
+  echo "  Vault: $VAULT_PATH"
+  echo "  Daily notes: $DAILY_DIR"
+  if [ "$EDITOR_CMD" = "not-configured" ]; then
+    echo "  Editor: ⚠️  Not configured (set EDITOR_CMD in config)"
+  else
+    echo "  Editor: $EDITOR_CMD"
+  fi
 }
 
 case "$1" in
--td)
+-t)
   add_todo "$@"
   ;;
 --done | -d)
@@ -242,7 +307,25 @@ case "$1" in
   list_all_todos
   ;;
 --edit | -e)
-  nvim "$FILE"
+  if [ "$EDITOR_CMD" = "not-configured" ]; then
+    echo "⚠️  Error: No editor configured."
+    echo ""
+    echo "Please configure an editor in your mdnote config file:"
+    echo "  EDITOR_CMD=\"nano\"  # or vim, nvim, code, etc."
+    echo ""
+    echo "Config file location: ~/.config/mdnote/config"
+    exit 1
+  fi
+  
+  if ! command -v "$EDITOR_CMD" &> /dev/null; then
+    echo "⚠️  Error: Editor '$EDITOR_CMD' not found."
+    echo ""
+    echo "Please install $EDITOR_CMD or configure a different editor in:"
+    echo "  ~/.config/mdnote/config"
+    exit 1
+  fi
+  
+  $EDITOR_CMD "$FILE"
   ;;
 --help | -h)
   print_help
@@ -250,12 +333,15 @@ case "$1" in
 *)
   if [[ "$1" == -* ]]; then
     echo "⚠️ Unknown option: $1"
+    echo ""
     print_help
+    exit 1
   elif [[ "$#" -eq 1 ]]; then
     add_journal_note "$1"
   else
     echo "⚠️ Please quote your note content."
-    echo "Example: qn \"Started writing task manager script\""
+    echo "Example: mdnote \"Started writing task manager script\""
+    exit 1
   fi
   ;;
 esac

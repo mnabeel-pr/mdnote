@@ -1,0 +1,16 @@
+# mdnote configuration file
+# Copy this file to one of the following locations:
+#   ~/.config/mdnote/config (recommended)
+#   ~/.mdnoterc
+#   ./.mdnoterc (project-specific)
+
+# Path to your notes vault (required)
+# This is where all your markdown files are stored
+VAULT_PATH="$HOME/notes"
+
+# Daily notes directory relative to vault path
+# Default: "Journal/Daily"
+DAILY_DIR_NAME="Journal/Daily"
+
+# Your preferred text editor (required for --edit command)
+EDITOR_CMD="nano" 
